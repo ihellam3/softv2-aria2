@@ -1,0 +1,13 @@
+{
+    "name":"aria2",
+    "displayName":"远程下载",
+    "version":"0.0.1",
+    "tags":"工具,下载",
+    "description": "Aria2 远程下载工具",
+    "event_scripts":[
+        {"installed":99},
+        {"start":99},
+        {"stop":99}
+    ],
+    "supports": ["orbi"]
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script type="text/javascript" src="https://unpkg.com/vue@2.2.1/dist/vue.min.js"></script>
+  <script type="text/javascript" src="https://unpkg.com/vue-form-generator@2.2.2"></script>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-form-generator@2.2.2/dist/vfg.css">
+  <title>Aria2</title>
+</head>
+
+<body>
+  <h1 class="text-center">Aria2</h1>
+  <div class="container" id="app">
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    function setup_kstoken() {
+        var kstoken = getParameterByName("kstoken");
+        if (kstoken) {
+            axios.defaults.headers.common['Ks-Authorization'] = kstoken;
+        }
+    }
+    setup_kstoken();
+
+    var vm = new Vue({
+      el: "#app",
+      components: {
+        'vue-form-generator': VueFormGenerator.component
+      },
+      data: function () {
+        var self = this
+        return {
+          model: {"mode":"0", "acl":"HTTP", "status":"数据更新中"},
+          schema: {
+            fields: [{
+               type: "select",
+               label: "工作模式",
+               model: "mode",
+               required: true,
+               values: function() {
+                   return [
+                       {"id":"0", "name":"关闭"},
+                       {"id":"1", "name":"全局模式"}
+                   ]
+               },
+               selectOptions: {
+                   hideNoneSelectedText: true
+               }
+            },{
+               type: "select",
+               label: "过滤方式",
+               model: "acl",
+               required: true,
+               values: function() {
+                   return [
+                       {"id":"1", "name":"HTTP"}
+                   ]
+               },
+               selectOptions: {
+                   hideNoneSelectedText: true
+               }
+            },{
+              type: "label",
+              label: "说明",
+              model: "status",
+            }, {
+              type: "submit",
+              label: "",
+              buttonText: "提交",
+              validateBeforeSubmit: true,
+              onSubmit: function(mod, sch) {
+                  var postData = {
+                     mode: mod.mode,
+                     acl: mod.acl
+                  };
+
+                  axios.post('/cgi-bin/luci/apps/aria2', postData).then(function(result) {
+                      self.handleData(result.data, true);
+                  });
+
+                }
+              }],
+
+          },
+          formOptions: {
+            validateAfterLoad: false,
+            validateAfterChanged: true
+          }
+        }
+      },
+      mounted: function() {
+        var self = this
+        var tm = function() {
+            axios.get("/cgi-bin/luci/apps/aria2").then(function(result) {
+              var data = result.data;
+              if (data.status == "") {
+                  data.status = "未运行";
+              } else {
+                  data.status = "运行中，pid=" + data.status;
+              }
+              self.model.status = data.status;
+            });
+        };
+        axios.get("/cgi-bin/luci/apps/aria2").then(function(result) {
+            self.handleData(result.data);
+            setTimeout(tm, 2000);
+        });
+      },
+      methods: {
+        handleData: function (data, is_post) {
+          if (data.status == "") {
+              data.status = "未运行";
+          } else {
+              data.status = "运行中，pid=" + data.status;
+          }
+          if (is_post) {
+            this.model.mode = data.mode;
+            this.model.acl = data.acl;
+            this.model.status = data.status;
+          } else {
+            this.model = data;
+          }
+
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
