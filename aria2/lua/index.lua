@@ -1,5 +1,6 @@
 local nixio = require "nixio"
 local ksutil = require "luci.ksutil"
+local fs = require "nixio.fs"
 
 module("luci.controller.apps.aria2.index", package.seeall)
 
@@ -20,7 +21,7 @@ continue=true
 enable-http-pipelining=false
 enable-rpc=true
 follow-torrent=true
-input-file=/koolshare/aria2/aria2.session
+input-file=/koolshare/apps/aria2/aria2.session
 listen-port=6888
 max-concurrent-downloads=3
 max-connection-per-server=10
@@ -31,14 +32,14 @@ rpc-allow-origin-all=true
 rpc-enable=1
 rpc-listen-all=true
 rpc-listen-port=%s
-save-session=/koolshare/aria2/aria2.session
+save-session=/koolshare/apps/aria2/aria2.session
 split=10
-dir=/mnt/sdb1/downloads
-rpc-secret=105b579f-b1ed-4623-a9c0-cb7cb2ba
+dir=%s
+rpc-secret=%s
 enable-dht=true
 user-agent=uTorrent/2210(25130)
 peer-id-prefix=-UT2210-
 ]]
-    print(string.format(template, "6800"))
+   fs.writefile("/koolshare/")
 end
 

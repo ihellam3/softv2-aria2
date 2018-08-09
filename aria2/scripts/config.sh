@@ -6,12 +6,12 @@
 
 load_uci_env(){
     config_load aria2
-    config_get aria2_mode main mode
-    config_get aria2_default main acl
+    config_get aria2_rpc_listen_port main rpc_listen
+    config_get aria2_listen_port main bt_listen
 }
 
 start_aria2(){
-    /koolshare/aria2/aria2c --conf-path=/tmp/aria2.conf -D >/dev/null 2>&1 &
+    $APP_ROOT/bin/aria2c --conf-path=/tmp/aria2.conf -D >/dev/null 2>&1 &
 }
 
 kill_aria2(){
@@ -20,19 +20,13 @@ kill_aria2(){
 
 open_port(){
     iptables -I input_wan_rule -p tcp --dport $aria2_rpc_listen_port -j ACCEPT >/dev/null 2>&1
-    iptables -I input_wan_rule -p tcp --dport 8088 -j ACCEPT >/dev/null 2>&1
     iptables -I input_wan_rule -p tcp --dport 6881:6889 -j ACCEPT >/dev/null 2>&1
-    iptables -I input_wan_rule -p tcp --dport $aria2_listen_port -j ACCEPT >/dev/null 2>&1
-    iptables -I input_wan_rule -p tcp --dport $aria2_listen_port -j ACCEPT >/dev/null 2>&1
     iptables -I input_wan_rule -p udp --dport $aria2_listen_port -j ACCEPT >/dev/null 2>&1
 }
 
 close_port(){
     iptables -D input_wan_rule -p tcp --dport $aria2_rpc_listen_port -j ACCEPT >/dev/null 2>&1
-    iptables -D input_wan_rule -p tcp --dport 8088 -j ACCEPT >/dev/null 2>&1
     iptables -D input_wan_rule -p tcp --dport 6881:6889 -j ACCEPT >/dev/null 2>&1
-    iptables -D input_wan_rule -p tcp --dport $aria2_listen_port -j ACCEPT >/dev/null 2>&1
-    iptables -D input_wan_rule -p tcp --dport $aria2_listen_port -j ACCEPT >/dev/null 2>&1
     iptables -D input_wan_rule -p udp --dport $aria2_listen_port -j ACCEPT >/dev/null 2>&1
 }
 
