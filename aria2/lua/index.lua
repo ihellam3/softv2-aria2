@@ -40,6 +40,6 @@ enable-dht=true
 user-agent=uTorrent/2210(25130)
 peer-id-prefix=-UT2210-
 ]]
-   fs.writefile("/koolshare/")
+   fs.writefile("/tmp/aria2.conf", string.format(template, "6800", "/tmp/mnt/sda", "105b579f-b1ed-4623-a9c0-cb7cb2ba6287-8c3bad23b6be"))
 end
 

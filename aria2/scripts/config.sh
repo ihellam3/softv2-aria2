@@ -8,6 +8,8 @@ load_uci_env(){
     config_load aria2
     config_get aria2_rpc_listen_port main rpc_listen
     config_get aria2_listen_port main bt_listen
+    echo $aria2_rpc_listen_port
+    echo $aria2_listen_port
 }
 
 start_aria2(){
@@ -19,18 +21,18 @@ kill_aria2(){
 }
 
 open_port(){
-    iptables -I input_wan_rule -p tcp --dport $aria2_rpc_listen_port -j ACCEPT >/dev/null 2>&1
     iptables -I input_wan_rule -p tcp --dport 6881:6889 -j ACCEPT >/dev/null 2>&1
+    iptables -I input_wan_rule -p tcp --dport $aria2_rpc_listen_port -j ACCEPT >/dev/null 2>&1
     iptables -I input_wan_rule -p udp --dport $aria2_listen_port -j ACCEPT >/dev/null 2>&1
 }
 
 close_port(){
-    iptables -D input_wan_rule -p tcp --dport $aria2_rpc_listen_port -j ACCEPT >/dev/null 2>&1
     iptables -D input_wan_rule -p tcp --dport 6881:6889 -j ACCEPT >/dev/null 2>&1
+    iptables -D input_wan_rule -p tcp --dport $aria2_rpc_listen_port -j ACCEPT >/dev/null 2>&1
     iptables -D input_wan_rule -p udp --dport $aria2_listen_port -j ACCEPT >/dev/null 2>&1
 }
 
-on_get(){
+prepare_conf(){
     lua -<<EOF
 require "luci.cacheloader"
 require "luci.sgi.cgi"
@@ -42,12 +44,24 @@ EOF
 
 }
 
+on_get(){
+    echo '{}'
+}
+
 case $ACTION in
 start)
-    echo '{}'
+    load_uci_env
+    prepare_conf
+    start_aria2
+    open_port
     ;;
 restart)
-    echo '{}'
+    load_uci_env
+    kill_aria2
+    close_port
+    prepare_conf
+    start_aria2
+    open_port
     ;;
 post)
     echo '{}'
@@ -59,5 +73,8 @@ installed)
     app_init_cfg '{"aria2":[{"_id":"main","enabled":"0","dir":"/tmp/mnt/sda","dht_enabled":"0","rpc_enabled":"0","rpc_listen":"6800","rpc_token":" ","bt_listen":"6888","max_conn":"60","trackers":" ","useragent":"user-agent=uTorrent/2210(25130),peer-id-prefix=-UT2210-"}]}'
     ;;
 stop)
+    load_uci_env
+    kill_aria2
+    close_port
     ;;
 esac
