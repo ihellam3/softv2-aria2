@@ -6,10 +6,9 @@
 
 load_uci_env(){
     config_load aria2
+    config_get aria2_enabled main enabled
     config_get aria2_rpc_listen_port main rpc_listen
     config_get aria2_listen_port main bt_listen
-    echo $aria2_rpc_listen_port
-    echo $aria2_listen_port
 }
 
 start_aria2(){
@@ -38,14 +37,25 @@ require "luci.cacheloader"
 require "luci.sgi.cgi"
 luci.dispatcher.indexcache = "/tmp/luci-indexcache"
 local index = require "luci.controller.apps.aria2.index"
-index.prepare_conf()
+index.prepare_conf(nil)
 
 EOF
 
 }
 
-on_get(){
-    echo '{}'
+on_post(){
+    load_uci_env
+    if [ "$aria2_enabled" = "1" ]; then
+        kill_aria2
+        close_port
+        start_aria2
+        open_port
+    else
+        kill_aria2
+        close_port
+    fi
+    status=`pidof aria2c`
+    echo '{"status":"'$status'"}'
 }
 
 case $ACTION in
@@ -64,10 +74,7 @@ restart)
     open_port
     ;;
 post)
-    echo '{}'
-    ;;
-get)
-    on_get
+    on_post
     ;;
 installed)
     app_init_cfg '{"aria2":[{"_id":"main","enabled":"0","dir":"/tmp/mnt/sda","dht_enabled":"0","rpc_enabled":"0","rpc_listen":"6800","rpc_token":" ","bt_listen":"6888","max_conn":"60","trackers":" ","useragent":"user-agent=uTorrent/2210(25130),peer-id-prefix=-UT2210-"}]}'

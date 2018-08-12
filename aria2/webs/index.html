@@ -48,35 +48,57 @@
       data: function () {
         var self = this
         return {
-          model: {"mode":"0", "acl":"HTTP", "status":"数据更新中"},
+          model: {"enabled":"0", "rootpath":"/", "download":"/", "rpctoken":"", "rpclisten":"", "status":"数据更新中"},
           schema: {
             fields: [{
-               type: "select",
-               label: "工作模式",
-               model: "mode",
-               required: true,
-               values: function() {
-                   return [
-                       {"id":"0", "name":"关闭"},
-                       {"id":"1", "name":"全局模式"}
-                   ]
-               },
-               selectOptions: {
-                   hideNoneSelectedText: true
-               }
+              type: "switch",
+              label: "开关",
+              model: "enabled",
+              multi: true,
+              readonly: false,
+              featured: false,
+              disabled: false,
+              default: false,
+              textOn: "启用",
+              textOff: "禁用"
             },{
                type: "select",
-               label: "过滤方式",
-               model: "acl",
-               required: true,
-               values: function() {
-                   return [
-                       {"id":"1", "name":"HTTP"}
-                   ]
-               },
+               label: "根目录参考",
+               model: "rootpath",
+               values: [],
                selectOptions: {
                    hideNoneSelectedText: true
+               },
+               onChanged: function(model, newVal, oldVal, field) {
+                   model.download = newVal;
                }
+            },{
+              type: "input",
+              inputType: "text",
+              label: "下载路径",
+              model: "download",
+              readonly: false,
+              featured: true,
+              required: true,
+              disabled: false,
+              placeholder: "请输入你的完整路径",
+              validator: VueFormGenerator.validators.string
+            },{
+              type: "input",
+              inputType: "text",
+              label: "Rpc 端口",
+              model: "rpclisten",
+              readonly: true,
+              featured: true,
+              required: true
+            },{
+              type: "input",
+              inputType: "text",
+              label: "RpcToken",
+              model: "rpctoken",
+              readonly: true,
+              featured: true,
+              required: true
             },{
               type: "label",
               label: "说明",
@@ -87,14 +109,26 @@
               buttonText: "提交",
               validateBeforeSubmit: true,
               onSubmit: function(mod, sch) {
-                  var postData = {
-                     mode: mod.mode,
-                     acl: mod.acl
-                  };
+                var postData = {
+                   enabled: (mod.enabled?"1":"0"),
+                   download: mod.download
+                };
 
-                  axios.post('/cgi-bin/luci/apps/aria2', postData).then(function(result) {
-                      self.handleData(result.data, true);
-                  });
+                var tm = function() {
+                    axios.get("/cgi-bin/luci/apps/aria2").then(function(result) {
+                      var data = result.data;
+                      if (data.status == "") {
+                          data.status = "未运行";
+                      } else {
+                          data.status = "运行中，pid=" + data.status;
+                      }
+                      self.model.status = data.status;
+                    });
+                };
+
+                axios.post('/cgi-bin/luci/apps/aria2', postData).then(function(result) {
+                    setTimeout(tm, 2000);
+                });
 
                 }
               }],
@@ -107,7 +141,7 @@
         }
       },
       mounted: function() {
-        var self = this
+        var self = this;
         var tm = function() {
             axios.get("/cgi-bin/luci/apps/aria2").then(function(result) {
               var data = result.data;
@@ -119,9 +153,32 @@
               self.model.status = data.status;
             });
         };
-        axios.get("/cgi-bin/luci/apps/aria2").then(function(result) {
-            self.handleData(result.data);
-            setTimeout(tm, 2000);
+        axios.get("/cgi-bin/luci/apps/aria2/mounts").then(function(result) {
+            var ds = ["/"];
+            var data = result.data;
+            for(i = 0; i < data.length; i++) {
+               if(data[i].mountpoint.startsWith("/tmp/")) {
+                    ds.push(data[i].mountpoint);
+               }
+            }
+            ds.sort();
+            self.schema.fields[1].values = ds;
+
+            axios.get("/cgi-bin/luci/apps/aria2").then(function(result) {
+                var data = {};
+                data["rootpath"] = ds[0];
+                data["download"] =  result.data.download;
+                data["rpctoken"] = result.data.rpc_token;
+                data["status"] = result.data.status;
+                data["rpclisten"] = result.data.rpc_listen;
+                if(result.data.enabled === "1") {
+                    data["enabled"] = true;
+                } else {
+                    data["enabled"] = false;
+                }
+                self.handleData(data, false);
+            });
+
         });
       },
       methods: {
@@ -132,8 +189,6 @@
               data.status = "运行中，pid=" + data.status;
           }
           if (is_post) {
-            this.model.mode = data.mode;
-            this.model.acl = data.acl;
             this.model.status = data.status;
           } else {
             this.model = data;
