@@ -25,8 +25,8 @@
   <script>
     function encode64Char(c) {
       switch (c) {
-        case '+': return '.';
-        case '=': return '-';
+        case '+': return '-';
+        case '=': return '';
         case '/': return '_';
       }
     }
@@ -113,8 +113,9 @@
               buttons:[{
                   "label":"远程地址",
                   onclick:function(mod){
-                      var rpcToken = urlsafeEncode64(mod.rpctoken);
+                      var rpcToken = urlsafeEncode64(mod.rpctoken.replace(/[\r\n]/g,""));
                       var url = "http://aria2.me/aria-ng/#!/settings/rpc/set/wss/www.ddnsto.com/443/jsonrpc/" + rpcToken;
+                      console.log(url);
                       window.open(url, "_blank");
                   }
               }]
@@ -187,7 +188,7 @@
                 var data = {};
                 data["rootpath"] = ds[0];
                 data["download"] =  result.data.download;
-                data["rpctoken"] = result.data.rpc_token;
+                data["rpctoken"] = result.data.rpc_token.replace(/[\r\n]/g,"");
                 data["status"] = result.data.status;
                 data["rpclisten"] = result.data.rpc_listen;
                 if(result.data.enabled === "1") {
