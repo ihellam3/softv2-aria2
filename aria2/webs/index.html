@@ -23,6 +23,17 @@
   </div>
 
   <script>
+    function encode64Char(c) {
+      switch (c) {
+        case '+': return '.';
+        case '=': return '-';
+        case '/': return '_';
+      }
+    }
+    function urlsafeEncode64(buffer) {
+      var encode_regex = /[\+=\/]/g;
+      return buffer.toString('base64').replace(encode_regex, encode64Char);
+    }
     function getParameterByName(name, url) {
         if (!url) url = window.location.href;
         name = name.replace(/[\[\]]/g, "\\$&");
@@ -98,7 +109,15 @@
               model: "rpctoken",
               readonly: true,
               featured: true,
-              required: true
+              required: true,
+              buttons:[{
+                  "label":"远程",
+                  onclick:function(mod){
+                      var rpcToken = urlsafeEncode64(mod.rpctoken);
+                      var url = "http://aria2.me/aria-ng/#!/settings/rpc/set/wss/www.ddnsto.com/443/jsonrpc/" + rpcToken;
+                      window.open(url, "_blank");
+                  }
+              }]
             },{
               type: "label",
               label: "说明",
