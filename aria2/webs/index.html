@@ -32,7 +32,7 @@
     }
     function urlsafeEncode64(buffer) {
       var encode_regex = /[\+=\/]/g;
-      return buffer.toString('base64').replace(encode_regex, encode64Char);
+      return window.btoa(buffer).replace(encode_regex, encode64Char);
     }
     function getParameterByName(name, url) {
         if (!url) url = window.location.href;
@@ -111,7 +111,7 @@
               featured: true,
               required: true,
               buttons:[{
-                  "label":"远程",
+                  "label":"远程地址",
                   onclick:function(mod){
                       var rpcToken = urlsafeEncode64(mod.rpctoken);
                       var url = "http://aria2.me/aria-ng/#!/settings/rpc/set/wss/www.ddnsto.com/443/jsonrpc/" + rpcToken;
