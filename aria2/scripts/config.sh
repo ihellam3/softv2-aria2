@@ -78,6 +78,7 @@ post)
     ;;
 installed)
     app_init_cfg '{"aria2":[{"_id":"main","enabled":"0","dir":"/tmp/mnt/sda","dht_enabled":"0","rpc_enabled":"0","rpc_listen":"6800","rpc_token":" ","bt_listen":"6888","max_conn":"60","trackers":" ","useragent":"user-agent=uTorrent/2210(25130),peer-id-prefix=-UT2210-"}]}'
+    touch /koolshare/apps/aria2/aria2.session
     ;;
 stop)
     load_uci_env
