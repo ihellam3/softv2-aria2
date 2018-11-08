@@ -114,8 +114,7 @@
                   "label":"远程地址",
                   onclick:function(mod){
                       var rpcToken = urlsafeEncode64(mod.rpctoken.replace(/[\r\n]/g,""));
-                      var url = "http://aria2.me/aria-ng/#!/settings/rpc/set/wss/www.ddnsto.com/443/jsonrpc/" + rpcToken;
-                      console.log(url);
+                      var url = "https://service.koolshare.cn/static/ariang-0.5.0/#!/settings/rpc/set/wss/www.ddnsto.com/443/jsonrpc/" + rpcToken;
                       window.open(url, "_blank");
                   }
               }]
